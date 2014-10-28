@@ -18,16 +18,13 @@ Create a new System Variable `NODE_PATH`:
 # Setup site
 Install IIS through Add/Remove Windows Features
 Set up a new IIS site for your install
-	example: gemini-wax.localhost
+	example: site-wax.localhost
 	Set up Virtual Directories to point to corresponding git directories (equivalent to symlinking)
 		Ajax
 		public
 	Remember to update your HOSTS file
 
 # Setup your project files
-> cd D:\dev
-> git clone git@github.space150.com:space150/gemini.git
-> cd gemini
 > npm install
 
 browserify --extension=".coffee" -t coffeeify -t stripify -t uglifyify public/coffee/application.coffee -o public/javascripts/application.js
