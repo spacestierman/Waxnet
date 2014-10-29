@@ -16,7 +16,7 @@ namespace Waxnet.FilesystemWatcher
 			string directory = args[0];
 			_watcher = new ApplicationWatcher(directory);
 			_watcher.IgnoreFilesMatchingPattern("~"); // Ignore Windows temporary files involved when creating/modifying files.
-			_watcher.IgnoreFilesMatchingPatterns("[.]js$", "[.]css$"); // Ignore .js and .css files.  Wax doesn't care about those.
+			_watcher.IgnoreFilesMatchingPatterns("[.]css$");
 
 			Console.ReadKey();
 		}
