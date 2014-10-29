@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Waxnet.FilesystemWatcher.Actions;
+using Waxnet.FilesystemWatcher.Audio;
 
 namespace Waxnet.FilesystemWatcher
 {
@@ -22,6 +23,11 @@ namespace Waxnet.FilesystemWatcher
 		private FileUpdate _runningUpdate;
 		private System.Threading.Timer _timer;
 
+		private DateTime? _lastNotification;
+
+		private AudioManager _audioManager;
+		private string _emptyQueueSoundKey;
+
 		public ApplicationWatcher(string directory)
 		{
 			_ignorePatterns = new List<string>();
@@ -33,7 +39,11 @@ namespace Waxnet.FilesystemWatcher
 			
 			EnableWatcher(_watcher);
 
+			_audioManager = new AudioManager();
+			_emptyQueueSoundKey = _audioManager.GetKeyEndingWith("hammer.wav");
+
 			_timer = new Timer(OnQueueTimerElapsed, 5, 0, 250);
+			Log("Watching {0}...", directory);
 		}
 
 		public void IgnoreFilesMatchingPattern(string pattern)
@@ -59,7 +69,20 @@ namespace Waxnet.FilesystemWatcher
 
 		private void OnActionLog(string message)
 		{
-			Console.WriteLine(message);
+			Log(message);
+		}
+
+		private void Log(string message)
+		{
+			string timestamp = DateTime.Now.ToString("HH:mm:ss.ffff");
+			string formattedMessage = string.Format("{0}: {1}", timestamp, message);
+			Console.WriteLine(formattedMessage);
+			_lastNotification = DateTime.Now;
+		}
+
+		private void Log(string format, params object[] args)
+		{
+			Log(string.Format(format, args));
 		}
 
 		private FileSystemWatcher CreateWatcher(string directory)
@@ -220,6 +243,22 @@ namespace Waxnet.FilesystemWatcher
 				_runningUpdate.Action.Go();
 				_runningUpdate = null;
 				_actionsToRun.Dequeue();
+				
+				if (_actionsToRun.Count <= 0) // If this was the last item in the queue, play a sound.
+				{
+					_audioManager.PlaySound(_emptyQueueSoundKey);
+				}
+			}
+			else
+			{
+				if (_lastNotification.HasValue)
+				{
+					TimeSpan difference = DateTime.Now.Subtract(_lastNotification.Value);
+					if (difference.TotalMinutes > 5)
+					{
+						Log("No changes...");
+					}
+				}
 			}
 		}
 	}

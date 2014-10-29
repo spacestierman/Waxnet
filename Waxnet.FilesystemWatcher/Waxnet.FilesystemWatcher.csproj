@@ -46,6 +46,7 @@
     <Compile Include="Actions\CoffeeCompileAction.cs" />
     <Compile Include="Actions\SassCompileAction.cs" />
     <Compile Include="Actions\WaxCompileAction.cs" />
+    <Compile Include="Audio\AudioManager.cs" />
     <Compile Include="FileUpdate.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -53,6 +54,29 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Audio\Clips\APPLAUSE.WAV" />
+    <EmbeddedResource Include="Audio\Clips\BREEZE.WAV" />
+    <EmbeddedResource Include="Audio\Clips\CAMERA.WAV" />
+    <EmbeddedResource Include="Audio\Clips\CASHREG.WAV" />
+    <EmbeddedResource Include="Audio\Clips\CLICK.WAV" />
+    <EmbeddedResource Include="Audio\Clips\COIN.WAV" />
+    <EmbeddedResource Include="Audio\Clips\DRUMROLL.WAV" />
+    <EmbeddedResource Include="Audio\Clips\FavSound.wav" />
+    <EmbeddedResource Include="Audio\Clips\HAMMER.WAV" />
+    <EmbeddedResource Include="Audio\Clips\LASER.WAV" />
+    <EmbeddedResource Include="Audio\Clips\LoadScript.wav" />
+    <EmbeddedResource Include="Audio\Clips\LoadScriptError.wav" />
+    <EmbeddedResource Include="Audio\Clips\TYPE.WAV" />
+    <EmbeddedResource Include="Audio\Clips\VOLTAGE.WAV" />
+    <EmbeddedResource Include="Audio\Clips\WHOOSH.WAV" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Space150.Common\Space150.Common.csproj">
+      <Project>{49a3b34d-a5f1-4d3b-b356-b0c8f4e88b96}</Project>
+      <Name>Space150.Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
