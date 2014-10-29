@@ -26,6 +26,7 @@ namespace Waxnet.FilesystemWatcher
 		private DateTime? _lastNotification;
 
 		private AudioManager _audioManager;
+		private string _actionCompletedSoundKey;
 		private string _emptyQueueSoundKey;
 		private string _errorSoundKey;
 
@@ -41,7 +42,14 @@ namespace Waxnet.FilesystemWatcher
 			EnableWatcher(_watcher);
 
 			_audioManager = new AudioManager();
-			_emptyQueueSoundKey = _audioManager.GetKeyEndingWith("hammer.wav");
+
+			_actionCompletedSoundKey = _audioManager.GetKeyEndingWith("LoadScript.wav");
+			if (string.IsNullOrEmpty(_actionCompletedSoundKey))
+			{
+				throw new Exception("Unable to find action complete sound key");
+			}
+
+			_emptyQueueSoundKey = _audioManager.GetKeyEndingWith("Hammer.wav");
 			if (string.IsNullOrEmpty(_emptyQueueSoundKey))
 			{
 				throw new Exception("Unable to find empty queue sound key");
@@ -93,7 +101,6 @@ namespace Waxnet.FilesystemWatcher
 		private void OnActionError(string message)
 		{
 			Log(message);
-			_audioManager.PlaySound(_errorSoundKey);
 		}
 
 		private void Log(string message)
@@ -263,15 +270,27 @@ namespace Waxnet.FilesystemWatcher
 		{
 			if (_runningUpdate == null && _actionsToRun.Count > 0)
 			{
-				_runningUpdate = _actionsToRun.Peek();
+				_runningUpdate = _actionsToRun.Dequeue();
 				_runningUpdate.Action.Go();
-				_runningUpdate = null;
-				_actionsToRun.Dequeue();
 				
-				if (_actionsToRun.Count <= 0) // If this was the last item in the queue, play a sound.
+				if (_actionsToRun.Count <= 0)
 				{
-					_audioManager.PlaySound(_emptyQueueSoundKey);
+					_audioManager.QueueSound(_emptyQueueSoundKey);
 				}
+				else if (!_runningUpdate.Action.ExitStatusCode.HasValue)
+				{
+					
+				}
+				else if (_runningUpdate.Action.ExitStatusCode.Value == BaseAction.EXIT_CODE_SUCCESS)
+				{
+					_audioManager.QueueSound(_actionCompletedSoundKey);
+				}
+				else
+				{
+					_audioManager.QueueSound(_errorSoundKey);
+				}
+
+				_runningUpdate = null;
 			}
 			else
 			{

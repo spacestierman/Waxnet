@@ -6,6 +6,7 @@ using System.Linq;
 using System.Media;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Waxnet.FilesystemWatcher.Audio
@@ -13,6 +14,15 @@ namespace Waxnet.FilesystemWatcher.Audio
 	class AudioManager
 	{
 		SoundPlayer _player;
+
+		private Queue<string> _queued;
+		private System.Threading.Timer _timer;
+
+		public AudioManager()
+		{
+			_queued = new Queue<string>();
+			_timer = new Timer(OnQueueTimerElapsed, 5, 0, 1);
+		}
 
 		public IEnumerable<string> GetSoundKeys()
 		{
@@ -42,7 +52,16 @@ namespace Waxnet.FilesystemWatcher.Audio
 			return assembly;
 		}
 
-		public void PlaySound(string soundKey)
+		private void OnQueueTimerElapsed(object state)
+		{
+			if (_player == null && _queued.Count > 0)
+			{
+				string soundKey = _queued.Dequeue();
+				PlaySoundImmediately(soundKey);
+			}
+		}
+
+		public void PlaySoundImmediately(string soundKey)
 		{
 			if (string.IsNullOrEmpty(soundKey))
 			{
@@ -53,14 +72,24 @@ namespace Waxnet.FilesystemWatcher.Audio
 			Stream resourceStream = assembly.GetManifestResourceStream(soundKey);
 			if (resourceStream != null)
 			{
-				if (_player == null)
+				_player = new SoundPlayer(resourceStream);
+				Action<SoundPlayer> play = p =>
 				{
-					_player = new SoundPlayer();
-				}
-
-				_player.Stream = resourceStream;
-				_player.Play();
+					_player.PlaySync();
+					OnSoundPlayComplete();
+				};
+				play.BeginInvoke(_player, null, null);
 			}
+		}
+
+		public void QueueSound(string soundKey)
+		{
+			_queued.Enqueue(soundKey);
+		}
+
+		private void OnSoundPlayComplete()
+		{
+			_player = null;
 		}
 	}
 }

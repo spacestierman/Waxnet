@@ -10,7 +10,7 @@ namespace Waxnet.FilesystemWatcher.Actions
 {
 	class BaseAction
 	{
-		private const int EXIT_CODE_SUCCESS = 0;
+		public const int EXIT_CODE_SUCCESS = 0;
 
 		public event Log OnLog;
 		public delegate void Log(string message);
@@ -20,6 +20,7 @@ namespace Waxnet.FilesystemWatcher.Actions
 
 		public bool IsRunning { get; private set; }
 		public DateTime? LastRunTimestamp { get; private set; }
+		public int? ExitStatusCode { get; private set; }
 
 		public BaseAction()
 		{
@@ -65,7 +66,8 @@ namespace Waxnet.FilesystemWatcher.Actions
 						process.BeginOutputReadLine();
 						process.WaitForExit();
 
-						if (process.ExitCode != EXIT_CODE_SUCCESS)
+						ExitStatusCode = process.ExitCode;
+						if (ExitStatusCode != EXIT_CODE_SUCCESS)
 						{
 							string errorMessage = process.StandardError.ReadToEnd();
 							HandleError(errorMessage);
