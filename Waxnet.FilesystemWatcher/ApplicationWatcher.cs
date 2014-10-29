@@ -27,13 +27,14 @@ namespace Waxnet.FilesystemWatcher
 
 		private AudioManager _audioManager;
 		private string _emptyQueueSoundKey;
+		private string _errorSoundKey;
 
 		public ApplicationWatcher(string directory)
 		{
 			_ignorePatterns = new List<string>();
 			_actionsToRun = new Queue<FileUpdate>();
 
-			_actionFactory = new ApplicationActionFactory(directory, OnActionLog);
+			_actionFactory = new ApplicationActionFactory(directory, OnActionLog, OnActionError);
 
 			_watcher = CreateWatcher(directory);
 			
@@ -41,9 +42,26 @@ namespace Waxnet.FilesystemWatcher
 
 			_audioManager = new AudioManager();
 			_emptyQueueSoundKey = _audioManager.GetKeyEndingWith("hammer.wav");
+			if (string.IsNullOrEmpty(_emptyQueueSoundKey))
+			{
+				throw new Exception("Unable to find empty queue sound key");
+			}
+
+			_errorSoundKey = _audioManager.GetKeyEndingWith("LoadScriptError.wav");
+			if (string.IsNullOrEmpty(_errorSoundKey))
+			{
+				throw new Exception("Unable to find error sound key");
+			}
 
 			_timer = new Timer(OnQueueTimerElapsed, 5, 0, 250);
 			Log("Watching {0}...", directory);
+		}
+
+		public void ManualBuild()
+		{
+			AddToQueue(CreateFileUpdateFor(string.Empty, _actionFactory.CreateWaxAction()));
+			AddToQueue(CreateFileUpdateFor(string.Empty, _actionFactory.CreateCoffeeAction()));
+			AddToQueue(CreateFileUpdateFor(string.Empty, _actionFactory.CreateSassAction()));
 		}
 
 		public void IgnoreFilesMatchingPattern(string pattern)
@@ -70,6 +88,12 @@ namespace Waxnet.FilesystemWatcher
 		private void OnActionLog(string message)
 		{
 			Log(message);
+		}
+
+		private void OnActionError(string message)
+		{
+			Log(message);
+			_audioManager.PlaySound(_errorSoundKey);
 		}
 
 		private void Log(string message)

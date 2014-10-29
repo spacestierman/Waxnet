@@ -10,38 +10,46 @@ namespace Waxnet.FilesystemWatcher.Actions
 	{
 		public string RootDirectory { get; set; }
 		public BaseAction.Log LogHandler { get; set; }
+		public BaseAction.Error ErrorHandler { get; set; }
 
-		public ApplicationActionFactory(string rootDirectory, BaseAction.Log logHandler)
+		public ApplicationActionFactory(string rootDirectory, BaseAction.Log logHandler = null, BaseAction.Error errorHandler = null)
 		{
 			RootDirectory = rootDirectory;
 			LogHandler = logHandler;
+			ErrorHandler = errorHandler;
 		}
 
 		public CoffeeCompileAction CreateCoffeeAction()
 		{
 			CoffeeCompileAction action = new CoffeeCompileAction(RootDirectory, @"public/coffee/application.coffee", @"public/javascripts/application.js");
-			AttachLogHandler(action);
+			AttachHandlers(action);
 			return action;
 		}
 
 		public WaxCompileAction CreateWaxAction()
 		{
 			WaxCompileAction action = new WaxCompileAction(RootDirectory);
-			AttachLogHandler(action);
+			AttachHandlers(action);
 			return action;
 		}
 
 		public SassCompileAction CreateSassAction()
 		{
 			SassCompileAction action = new SassCompileAction(RootDirectory, "public/scss", "public/stylesheets");
-			AttachLogHandler(action);
+			AttachHandlers(action);
 			return action;
 		}
 
-		private void AttachLogHandler(BaseAction action){
+		private void AttachHandlers(BaseAction action)
+		{
 			if (LogHandler != null)
 			{
 				action.OnLog += LogHandler;
+			}
+
+			if (ErrorHandler != null)
+			{
+				action.OnError += ErrorHandler;
 			}
 		}
 	}

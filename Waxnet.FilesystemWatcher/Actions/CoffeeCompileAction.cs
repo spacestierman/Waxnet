@@ -31,5 +31,13 @@ namespace Waxnet.FilesystemWatcher.Actions
 		{
 			CompileCoffee();
 		}
+
+		protected override void OnConsoleDataReceived(string data)
+		{
+			if (data.ToLower().Contains("error"))
+			{
+				ErrorIfAvailable(data);
+			}
+		}
 	}
 }

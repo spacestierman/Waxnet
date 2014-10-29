@@ -10,8 +10,13 @@ namespace Waxnet.FilesystemWatcher.Actions
 {
 	class BaseAction
 	{
+		private const int EXIT_CODE_SUCCESS = 0;
+
 		public event Log OnLog;
 		public delegate void Log(string message);
+
+		public event Error OnError;
+		public delegate void Error(string message);
 
 		public bool IsRunning { get; private set; }
 		public DateTime? LastRunTimestamp { get; private set; }
@@ -46,6 +51,7 @@ namespace Waxnet.FilesystemWatcher.Actions
 				startInfo.UseShellExecute = false;
 				startInfo.RedirectStandardInput = true;
 				startInfo.RedirectStandardOutput = true;
+				startInfo.RedirectStandardError = true;
 				startInfo.CreateNoWindow = false;
 
 				try
@@ -53,10 +59,17 @@ namespace Waxnet.FilesystemWatcher.Actions
 					using (Process process = new Process())
 					{
 						process.OutputDataReceived += OnProcessOutputDataReceived;
+						process.ErrorDataReceived += OnProcessErrorDataReceived;
 						process.StartInfo = startInfo;
 						process.Start();
 						process.BeginOutputReadLine();
 						process.WaitForExit();
+
+						if (process.ExitCode != EXIT_CODE_SUCCESS)
+						{
+							string errorMessage = process.StandardError.ReadToEnd();
+							HandleError(errorMessage);
+						}
 					}
 				}
 				catch(Win32Exception e)
@@ -71,12 +84,37 @@ namespace Waxnet.FilesystemWatcher.Actions
 			}
 		}
 
+		virtual protected void OnConsoleDataReceived(string data)
+		{
+			// For sub-classes to implement, if they care about their output
+		}
+
+		virtual protected void OnConsoleErrorReceived(string data)
+		{
+			// For sub-classes to implement, if they care about their errors
+		}
+
 		private void OnProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
 		{
 			if (e.Data != null)
 			{
+				OnConsoleDataReceived(e.Data);
 				LogIfAvailable(e.Data);
 			}
+		}
+
+		private void OnProcessErrorDataReceived(object sender, DataReceivedEventArgs e)
+		{
+			if (e.Data != null)
+			{
+				HandleError(e.Data);
+			}
+		}
+
+		private void HandleError(string error)
+		{
+			OnConsoleErrorReceived(error);
+			ErrorIfAvailable(error);
 		}
 
 		protected void LogIfAvailable(string lines)
@@ -88,6 +126,14 @@ namespace Waxnet.FilesystemWatcher.Actions
 				{
 					OnLog(token);
 				}
+			}
+		}
+
+		protected void ErrorIfAvailable(string message)
+		{
+			if (OnError != null)
+			{
+				OnError(message);
 			}
 		}
 	}
