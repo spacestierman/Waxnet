@@ -273,21 +273,18 @@ namespace Waxnet.FilesystemWatcher
 				_runningUpdate = _actionsToRun.Dequeue();
 				_runningUpdate.Action.Go();
 				
-				if (_actionsToRun.Count <= 0)
+				if (!_runningUpdate.Action.ExitStatusCode.HasValue || _runningUpdate.Action.ExitStatusCode.Value != BaseAction.EXIT_CODE_SUCCESS)
 				{
-					_audioManager.QueueSound(_emptyQueueSoundKey);
-				}
-				else if (!_runningUpdate.Action.ExitStatusCode.HasValue)
-				{
-					
-				}
-				else if (_runningUpdate.Action.ExitStatusCode.Value == BaseAction.EXIT_CODE_SUCCESS)
-				{
-					_audioManager.QueueSound(_actionCompletedSoundKey);
+					_audioManager.QueueSound(_errorSoundKey);
 				}
 				else
 				{
-					_audioManager.QueueSound(_errorSoundKey);
+					_audioManager.QueueSound(_actionCompletedSoundKey);
+				}
+
+				if (_actionsToRun.Count <= 0)
+				{
+					_audioManager.QueueSound(_emptyQueueSoundKey);
 				}
 
 				_runningUpdate = null;
